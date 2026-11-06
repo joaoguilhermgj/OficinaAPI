@@ -2,7 +2,7 @@
 
 API de gestão de oficina mecânica desenvolvida em .NET, construída como projeto de portfólio.
 
-> 🚧 Em desenvolvimento. O módulo de veículos está pronto, e os próximos módulos estão listados abaixo.
+Em desenvolvimento. O módulo de veículos está pronto, e os próximos módulos estão listados abaixo.
 
 ## Tecnologias
 
@@ -68,6 +68,3 @@ O projeto é dividido em camadas:
 - [ ] Testes unitários
 - [ ] Docker
 - [ ] Front-end
-
-João Guilherme  
-[LinkedIn](https://www.linkedin.com/in/joaoguilhermegj) · [GitHub](https://github.com/joaoguilhermgj)
