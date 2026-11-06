@@ -3,4 +3,5 @@
   <Project Path="Oficina.Application/Oficina.Application.csproj" />
   <Project Path="Oficina.Domain/Oficina.Domain.csproj" />
   <Project Path="Oficina.Infrastructure/Oficina.Infrastructure.csproj" />
+  <Project Path="Oficina.Tests/Oficina.Tests.csproj" Id="8728b6d5-cf38-410c-a41e-bd23c584efa6" />
 </Solution>
