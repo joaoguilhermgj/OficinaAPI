@@ -92,5 +92,198 @@ namespace Oficina.Tests.Services
 
             Assert.Equal(string.Empty, resultado.Cor);
         }
+
+        [Fact] 
+        public async Task CriarAsync_ComPlacaDuplicada_DeveLancarExcecao()
+        {
+            _repositoryMock
+                .Setup(r => r.PlacaExisteAsync("ABC1D23", It.IsAny<int?>()))
+                .ReturnsAsync(true);
+
+            var dto = CriarDtoValido() with { Placa = "abc-1d23" };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+            _repositoryMock.Verify(r => r.AdicionarAsync(It.IsAny<Veiculo>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData("ABC12")]
+        [InlineData("ABC12345")]
+        [InlineData("")]
+        [InlineData(null)]
+        public async Task CriarAsync_ComPlacaDeTamanhoInvalido_DeveLancarExcecao(string? placa)
+        {
+            var dto = CriarDtoValido() with { Placa = placa! };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(null)]
+        public async Task CriarAsync_ComMarcaVazia_DeveLancarExcecao(string? marca)
+        {
+            var dto = CriarDtoValido() with { Marca = marca! };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(null)]
+        public async Task CriarAsync_ComModeloVazio_DeveLancarExcecao(string? modelo)
+        {
+            var dto = CriarDtoValido() with { Modelo = modelo! };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Theory]
+        [InlineData(1800)]
+        [InlineData(1885)]
+        public async Task CriarAsync_ComAnoMuitoAntigo_DeveLancarExcecao(int ano)
+        {
+            var dto = CriarDtoValido() with { Ano = ano };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Fact]
+        public async Task CriarAsync_ComAnoNoFuturo_DeveLancarExcecao()
+        {
+            var dto = CriarDtoValido() with { Ano = DateTime.Now.Year + 2 };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(-1000)]
+        public async Task CriarAsync_ComQuilometragemNegativa_DeveLancarExcecao(int quilometragem)
+        {
+            var dto = CriarDtoValido() with { Quilometragem = quilometragem };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Fact]
+        public async Task CriarAsync_ComTipoInvalido_DeveLancarExcecao()
+        {
+            var dto = CriarDtoValido() with { Tipo = (TipoVeiculo)99 };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.CriarAsync(dto));
+        }
+
+        [Fact]
+        public async Task AtualizarAsync_VeiculoInexistente_DeveRetornarFalse()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(99)).ReturnsAsync((Veiculo?)null);
+
+            var resultado = await _service.AtualizarAsync(99, AtualizarDtoValido());
+
+            Assert.False(resultado);
+            _repositoryMock.Verify(r => r.Atualizar(It.IsAny<Veiculo>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AtualizarAsync_ComDadosValidos_DeveAtualizarVeiculo()
+        {
+            var veiculo = VeiculoNoBanco();
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(veiculo);
+
+            var resultado = await _service.AtualizarAsync(1, AtualizarDtoValido());
+
+            Assert.True(resultado);
+            Assert.Equal(90000, veiculo.Quilometragem);
+            Assert.Equal(StatusManutencao.EmManutencao, veiculo.Status);
+            _repositoryMock.Verify(r => r.Atualizar(veiculo), Times.Once);
+        }
+
+        [Fact]
+        public async Task AtualizarAsync_ComPlacaDeOutroVeiculo_DeveLancarExcecao()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(VeiculoNoBanco());
+            _repositoryMock.Setup(r => r.PlacaExisteAsync("ABC1D23", 1)).ReturnsAsync(true);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.AtualizarAsync(1, AtualizarDtoValido()));
+        }
+
+        [Fact]
+        public async Task AtualizarAsync_ComQuilometragemMenor_DeveLancarExcecao()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(VeiculoNoBanco());
+
+            var dto = AtualizarDtoValido() with { Quilometragem = 80000 };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.AtualizarAsync(1, dto));
+        }
+
+        [Fact]
+        public async Task AtualizarAsync_ComMesmaQuilometragem_DevePermitir()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(VeiculoNoBanco());
+
+            var dto = AtualizarDtoValido() with { Quilometragem = 85000 };
+
+            var resultado = await _service.AtualizarAsync(1, dto);
+
+            Assert.True(resultado);
+        }
+
+        [Fact]
+        public async Task AtualizarAsync_ComStatusInvalido_DeveLancarExcecao()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(VeiculoNoBanco());
+
+            var dto = AtualizarDtoValido() with { Status = (StatusManutencao)99 };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _service.AtualizarAsync(1, dto));
+        }
+
+        [Fact]
+        public async Task RemoverAsync_VeiculoInexistente_DeveRetornarFalse()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(99)).ReturnsAsync((Veiculo?)null);
+
+            var resultado = await _service.RemoverAsync(99);
+
+            Assert.False(resultado);
+            _repositoryMock.Verify(r => r.Remover(It.IsAny<Veiculo>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task RemoverAsync_VeiculoExistente_DeveRemover()
+        {
+            var veiculo = VeiculoNoBanco();
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(veiculo);
+
+            var resultado = await _service.RemoverAsync(1);
+
+            Assert.True(resultado);
+            _repositoryMock.Verify(r => r.Remover(veiculo), Times.Once);
+        }
+
+        [Fact]
+        public async Task ObterPorIdAsync_VeiculoInexistente_DeveRetornarNull()
+        {
+            _repositoryMock.Setup(r => r.ObterPorIdAsync(99)).ReturnsAsync((Veiculo?)null);
+
+            var resultado = await _service.ObterPorIdAsync(99);
+
+            Assert.Null(resultado);
+        }
+
+        [Fact]
+        public async Task ObterTodosVeiculosAsync_DeveRetornarTodosOsVeiculos()
+        {
+            var veiculos = new List<Veiculo> { VeiculoNoBanco(), VeiculoNoBanco() };
+            _repositoryMock.Setup(r => r.ObterTodosAsync()).ReturnsAsync(veiculos);
+
+            var resultado = await _service.ObterTodosVeiculosAsync();
+
+            Assert.Equal(2, resultado.Count());
+        }
     }
 }
