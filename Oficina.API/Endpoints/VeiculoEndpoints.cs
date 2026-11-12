@@ -22,28 +22,14 @@ namespace Oficina.API.Endpoints
 
             grupo.MapPost("/", async (CriarVeiculoDto dto, VeiculoService service) =>
             {
-                try
-                {
-                    var criado = await service.CriarAsync(dto);
-                    return Results.Created($"/api/veiculos/{criado.Id}", criado);
-                }
-                catch (ArgumentException ex)
-                {
-                    return Results.BadRequest(ex.Message);
-                }
+                var criado = await service.CriarAsync(dto);
+                return Results.Created($"/api/veiculos/{criado.Id}", criado);
             });
 
             grupo.MapPut("/{id:int}", async (int id, AtualizarVeiculoDto dto, VeiculoService service) =>
             {
-                try
-                {
-                    var atualizado = await service.AtualizarAsync(id, dto);
-                    return atualizado ? Results.NoContent() : Results.NotFound();
-                }
-                catch (ArgumentException ex)
-                {
-                    return Results.BadRequest(ex.Message);
-                }
+                var atualizado = await service.AtualizarAsync(id, dto);
+                return atualizado ? Results.NoContent() : Results.NotFound();
             });
 
             grupo.MapDelete("/{id:int}", async (int id, VeiculoService service) =>

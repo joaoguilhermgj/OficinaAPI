@@ -4,6 +4,8 @@ using Oficina.Application.Interfaces;
 using Oficina.Application.Service;
 using Oficina.Infrastructure.Context;
 using Oficina.Infrastructure.Repositories;
+using Oficina.API.Middlewares;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +28,7 @@ builder.Services.AddScoped<VeiculoService>();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
