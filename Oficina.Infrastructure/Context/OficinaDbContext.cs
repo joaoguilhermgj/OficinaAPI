@@ -1,10 +1,11 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oficina.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Oficina.Infrastructure.Identity;
 
 namespace Oficina.Infrastructure.Context
 {
-    public class OficinaDbContext : DbContext
+    public class OficinaDbContext : IdentityDbContext<ApplicationUser>
     {
 
         public OficinaDbContext(DbContextOptions<OficinaDbContext> options) : base(options)
